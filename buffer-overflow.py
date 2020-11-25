@@ -1,4 +1,5 @@
 import binascii
+import os
 import socket
 import struct
 import subprocess
@@ -10,9 +11,7 @@ from typing import Union
 def execute(command: str) -> None:
     """function to execute command and print out the command"""
     print(f"[+] Executing: {command}")
-    process = subprocess.run(command, capture_output = True)
-    print("stdout: ", process.stdout.decode())
-    print("stderr: ", process.stderr.decode())
+    os.system(command)
 
 
 def send_data(data: Union[bytes, str], timeout: int = 5) -> None:
