@@ -251,8 +251,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description = "Buffer overflow exploit testing tool")
-    parser.add_argument("--prefix", help = "prefix of the string to send", default = "OVERFLOW1")
-    parser.add_argument("--suffix", help = "suffix of the string to send", default = "\r\n")
+    parser.add_argument("--prefix", help = "prefix of the string to send", default = "")
+    parser.add_argument("--suffix", help = "suffix of the string to send", default = "")
     parser.add_argument("--ip", help = "target ip address", required = True)
     parser.add_argument("--port", help = "target port to exploit", required = True)
     parser.add_argument("--rport", help = "reverse shell port", default = 443)
