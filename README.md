@@ -26,13 +26,16 @@ I created the tool and used it in the OSCP exam and passed. This only helps you 
 Buffer overflow exploit testing tool
 
 optional arguments:
-  -h, --help              show this help message and exit
-  --prefix PREFIX         prefix of the string to send
-  --suffix SUFFIX         suffix of the string to send
-  --ip IP                 target ip address
-  --port PORT             target port to exploit
-  --rport RPORT           reverse shell port (default: 443)
-  --interface INTERFACE   the interface to use (default: "tun0")
+  -h, --help            show this help message and exit
+  --prefix PREFIX       prefix of the string to send
+  --suffix SUFFIX       suffix of the string to send
+  --ip IP               target ip address
+  --port PORT           target port to exploit
+  --rport RPORT         reverse shell port (default: 443)
+  --interface INTERFACE the interface to use (default: "tun0")
+  --msf MSF             metasploit framework directory to use
+  --noreceive           use if the program doesn't send an initial response on connect
+  --newline             add newline character to the end of the sent data
 ```
 
 ![](screenshots/1.png)

