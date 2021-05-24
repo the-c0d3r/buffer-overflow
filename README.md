@@ -15,7 +15,7 @@ I created the tool and used it in the OSCP exam and passed. This only helps you 
 
 ## Features
 - fuzz the application
-- send cyclic pattern 
+- send cyclic pattern
 - query exact offset
 - iteratively send badchars array
 - generating shell code based on the interface ip and provided `--rport` value
@@ -47,3 +47,5 @@ optional arguments:
 
 ## Contributors
 - @cY83rR0H1t: testing and screenshots
+- @AliceGrey: fixing wording, adding new features
+
