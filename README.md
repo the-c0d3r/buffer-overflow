@@ -39,7 +39,10 @@ optional arguments:
   --msf MSF             metasploit framework directory to use
   --noreceive           use if the program doesn't send an initial response on connect
   --newline             add newline character to the end of the sent data
+  --step STEP           step increment for fuzzing, default 100, try increasing if EIP is not overwritten
 ```
+
+Note: there will be some edge cases where the application crashes, but the EIP is not overwritten with 0x41. In this kind of case, try increasing the `--step` value to cover the gap between crashing offset and EIP overwriting offset.
 
 ![](screenshots/1.png)
 

